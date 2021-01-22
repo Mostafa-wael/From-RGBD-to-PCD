@@ -1,7 +1,7 @@
 
-import open3d as o3d
 import matplotlib.pyplot as plt
 import numpy as np
+import open3d as o3d
 
 if __name__ == "__main__":
     print("Start\n")
@@ -20,6 +20,7 @@ if __name__ == "__main__":
     plt.title('depth image')
     plt.imshow(rgbd_image.depth)
     plt.show()
+    
 
     w = 640
     h = 480
@@ -27,6 +28,7 @@ if __name__ == "__main__":
     fy = 320.
     cx = 320.
     cy = 240.
+    print(np.asarray(rgbd_image.color)[h-1][w-1])
     intrinsic = o3d.camera.PinholeCameraIntrinsic(w, h, fx,fy, cx, cy)
     intrinsic.intrinsic_matrix = [[fx, 0, cx], [0, fy, cy], [0, 0, 1]]
     cam = o3d.camera.PinholeCameraParameters()
