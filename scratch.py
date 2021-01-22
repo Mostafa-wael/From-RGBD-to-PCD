@@ -1,70 +1,73 @@
 
+#!/usr/bin/env python
 import matplotlib.pyplot as plt
 import numpy as np
-import cv2
-import pptk
-
-#     fx          cx               fy      cy
-P = [320.0, 0.0, 320.0, 0.0, 0.0, 320.0, 240.0, 0.0, 0.0, 0.0, 1.0, 0.0]
-w = 640
-h = 480
-fx = P[0]
-fy = P[5]
-cx = P[2]
-cy = P[6]
-tx = P[3]
-ty = P[7]
-depthScale = 1
+import rospy
+from std_msgs.msg import Int8, String
+from sensor_msgs.msg import Image, CameraInfo
 
 
-def resizeImage(image, scale):  # e.g 50 for 50%
-    # calculate the 50 percent of original dimensions
-    width = int(image.shape[1] * scale / 100)
-    height = int(image.shape[0] * scale / 100)
-    # dsize
-    dsize = (width, height)
-    # resize image
-    output = cv2.resize(image, dsize)
+class RGBD2XYZ():
+    def __init__(self):
+        self.P = []
+        self.w = 640
+        self.h = 480
+        self.fx = 0
+        self.fy = 0
+        self.cx = 0
+        self.cy = 0
+        self.tx = 0
+        self.ty = 0
+        self.depthScale = 1
 
+    def defineP(self, arr):  # pass a list
+        self.P = arr
+        self.fx = self.P[0]
+        self.fy = self.P[5]
+        self.cx = self.P[2]
+        self.cy = self.P[6]
+        self.tx = self.P[3]
+        self.ty = self.P[7]
+        return self.P
 
-def calcZ(d):
-    z = d / depthScale
-    return z
+    def calcZ(self, d):
+        z = d / self.depthScale
+        return z
 
+    def calcX(self, u, z):
+        X = (u - self.cx)*z/self.fx
+        return X
 
-def calcX(u, z):
-    CX = cx
-    Z = z
-    FX = fx
-    X = (u - CX)*Z/FX
-    return X
+    def calcY(self, v, z):
+        Y = (v - self.cy)*z/self.fy
+        return Y
 
-
-def calcY(v, z):
-    CY = cy
-    Z = z
-    FY = fy
-    Y = (v - CY)*Z/FY
-    return Y
-
-
-def xyz_array(dep_array):
-    array_xyz = []
-    for i in range(0, h):
-        for j in range(0, w):
-            z = calcZ(dep_array[i+j])
-            y = calcY(i, z)
-            x = calcX(j, z)
-            arr = [x, y, z]
-            array_xyz.append(arr)
-    return array_xyz
+    def xyz_array(self, dep_array):
+        array_xyz = []
+        for i in range(0, self.h):
+            for j in range(0, self.w):
+                z = self.calcZ(dep_array[i+j])
+                y = self.calcY(i, z)
+                x = self.calcX(j, z)
+                arr = [x, y, z]
+                array_xyz.append(arr)
+        return array_xyz
 
 
 if __name__ == "__main__":
 
+    #       fx          cx             fy      cy
+    arr = [320.0, 0.0, 320.0, 0.0, 0.0,320.0, 240.0, 0.0, 0.0, 0.0, 1.0, 0.0]
+
     depth_arr = np.genfromtxt("dataset/data/left/depth_1.txt", delimiter=',')
     depth_arr.dtype
     print(depth_arr)
-    xyz = xyz_array(depth_arr)
+
+    obj = RGBD2XYZ()
+    obj.defineP(arr)
+    xyz = obj.xyz_array(depth_arr)
+
     print(xyz)  # takes long time to execute
+    print("Done!")
+
     # v = pptk.viewer(xyz_array)  # not working yet, documentation: https://heremaps.github.io/pptk/tutorials/viewer/tanks_and_temples.html
