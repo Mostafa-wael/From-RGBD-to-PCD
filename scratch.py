@@ -1,6 +1,5 @@
 
 #!/usr/bin/env python
-import matplotlib.pyplot as plt
 import numpy as np
 import rospy
 from std_msgs.msg import Int8, String
@@ -19,6 +18,12 @@ class RGBD2XYZ():
         self.tx = 0
         self.ty = 0
         self.depthScale = 1
+        ################################################################
+        self.imu_sub = rospy.Subscriber('/airsim_node/PhysXCar/front_left_bumblebee/DepthPlanner/camera_info', CameraInfo, self.callback_P)
+
+    def callback_P(self, data):
+        self.P = data.P
+        rospy.loginfo(self.P)
 
     def defineP(self, arr):  # pass a list
         self.P = arr
@@ -56,18 +61,21 @@ class RGBD2XYZ():
 
 if __name__ == "__main__":
 
-    #       fx          cx             fy      cy
-    arr = [320.0, 0.0, 320.0, 0.0, 0.0,320.0, 240.0, 0.0, 0.0, 0.0, 1.0, 0.0]
+    try:
+        #       fx          cx             fy      cy
+        arr = [320.0, 0.0, 320.0, 0.0, 0.0, 320.0, 240.0, 0.0, 0.0, 0.0, 1.0, 0.0]
 
-    depth_arr = np.genfromtxt("dataset/data/left/depth_1.txt", delimiter=',')
-    depth_arr.dtype
-    print(depth_arr)
+        depth_arr = np.genfromtxt("dataset/data/left/depth_1.txt", delimiter=',')
+        depth_arr.dtype
+        print(depth_arr)
 
-    obj = RGBD2XYZ()
-    obj.defineP(arr)
-    xyz = obj.xyz_array(depth_arr)
+        obj = RGBD2XYZ()
+        obj.defineP(arr)
+        xyz = obj.xyz_array(depth_arr)
 
-    print(xyz)  # takes long time to execute
-    print("Done!")
+        print(xyz)  # takes long time to execute
+        print("Done!")
 
-    # v = pptk.viewer(xyz_array)  # not working yet, documentation: https://heremaps.github.io/pptk/tutorials/viewer/tanks_and_temples.html
+    except rospy.ROSInterruptException:
+        print("Failed!")
+        pass
