@@ -24,6 +24,12 @@ class RGBD2XYZ():
     def callback_P(self, data):
         self.P = data.P
         rospy.loginfo(self.P)
+        self.fx = self.P[0]
+        self.fy = self.P[5]
+        self.cx = self.P[2]
+        self.cy = self.P[6]
+        self.tx = self.P[3]
+        self.ty = self.P[7]
 
     def defineP(self, arr):  # pass a list
         self.P = arr
