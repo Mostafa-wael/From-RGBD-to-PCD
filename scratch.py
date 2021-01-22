@@ -46,8 +46,9 @@ class RGBD2XYZ():
         Y = (v - self.cy)*z/self.fy
         return Y
 
-    def xyz_array(self, dep_array):
+    def xyz_array(self, depthImage):
         array_xyz = []
+        dep_array = list(depthImage)
         for i in range(0, self.h):
             for j in range(0, self.w):
                 z = self.calcZ(dep_array[i+j])
@@ -62,13 +63,12 @@ if __name__ == "__main__":
 
     try:
         rospy.init_node("camera_info")
-        depth_arr = np.genfromtxt(
-            "dataset/data/left/depth_1.txt", delimiter=',')
-        depth_arr.dtype
-        print(depth_arr)
+        data = rospy.wait_for_message( '/airsim_node/PhysXCar/front_left_bumblebee/DepthPlanner', Image, 100)
+        depthImage = data
+        print(depthImage)
 
         obj = RGBD2XYZ()
-        xyz = obj.xyz_array(depth_arr)
+        xyz = obj.xyz_array(depthImage)
 
         print(xyz)  # takes long time to execute
         print("Done!")
