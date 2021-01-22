@@ -3,6 +3,8 @@ import open3d as o3d
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
+import pptk
+
 
 w = 640
 h = 480
@@ -68,30 +70,43 @@ def xyzarray(dep_array):
         array_xyz.append(arr)
     return array_xyz
 
+def xyzarray_coord(dep_array):
+    array_xyz = []
+    for i in range(0, h):
+        for j in range(0, w):
+            z = calcZ(dep_array[i+j])
+            y = calcY(i, z)
+            x = calcX(j, z)
+            arr = [x, y, z]
+            array_xyz.append(arr)
+    return array_xyz
+
 
 if __name__ == "__main__":
-    color_raw = cv2.imread("dataset/data/left/scene_1.jpg")
+    # color_raw = cv2.imread("dataset/data/left/scene_1.jpg")
     #depth_raw = open("dataset/data/left/depth_1.txt", "r").read()
-    depth_raw = cv2.imread("dataset/data/left/depth_1.jpg")
+    # depth_raw = cv2.imread("dataset/data/left/depth_1.jpg")
     #color_raw = rgb2gray(color_raw)
-    resizeImage(color_raw, 1)
-    resizeImage(depth_raw, 1)
+    # resizeImage(color_raw, 1)
+    # resizeImage(depth_raw, 1)
 
     # cv2.imshow("color_raw", color_raw)
     # cv2.imshow("depth_raw", depth_raw)
     #showImages(color_raw, depth_raw)
 
-    color_array = np.asarray(color_raw)
-    depth_array = np.asarray(depth_raw)
+    # color_array = np.asarray(color_raw)
+    # depth_array = np.asarray(depth_raw)
     # print(color_array)
     # print(depth_array)
-    print(color_array[h-1][w-1])
+    # print(color_array[h-1][w-1])
     # for item in depth_array:
     #     print(item[639])
-    depth_arr = np.genfromtxt("depth_1.txt", delimiter=',')
+    depth_arr = np.genfromtxt("dataset/data/left/depth_1.txt", delimiter=',')
     depth_arr.dtype
     print(depth_arr)
-    xyz_array = xyzarray(depth_arr)
+    xyz_array = xyzarray_coord(depth_arr)
+    v = pptk.viewer(xyz_array)  # not working yet, documentation: https://heremaps.github.io/pptk/tutorials/viewer/tanks_and_temples.html
+    print(xyz_array) # takes long time to execute
 
 
 # intrinsic = o3d.camera.PinholeCameraIntrinsic(w, h, fx,fy, cx, cy)
