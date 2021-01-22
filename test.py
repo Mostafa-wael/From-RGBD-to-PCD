@@ -6,9 +6,9 @@ import numpy as np
 if __name__ == "__main__":
     print("Start\n")
     color_raw = o3d.io.read_image("dataset/data/left/scene_1.jpg")
-    depth_raw = open("dataset/data/left/depth_1.txt", "r").read()
+    #depth_raw = open("dataset/data/left/depth_1.txt", "r").read()
     depth_raw = o3d.io.read_image("dataset/data/left/depth_1.jpg")
-    print(depth_raw)
+    print(np.asarray(depth_raw))
 
     rgbd_image = o3d.open3d.geometry.create_rgbd_image_from_color_and_depth(color_raw, depth_raw)
     print(rgbd_image)
