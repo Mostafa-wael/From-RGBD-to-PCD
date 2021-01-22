@@ -19,20 +19,13 @@ class RGBD2XYZ():
         self.ty = 0
         self.depthScale = 1
         ################################################################
-        self.imu_sub = rospy.Subscriber('/airsim_node/PhysXCar/front_left_bumblebee/DepthPlanner/camera_info', CameraInfo, self.callback_P)
+        self.defineParameters()
 
-    def callback_P(self, data):
+    def defineParameters(self):  # waits for a message
+        data = rospy.wait_for_message( '/airsim_node/PhysXCar/front_left_bumblebee/DepthPlanner/camera_info', CameraInfo, 100)
+        self.w = data.width
+        self.h = data.height
         self.P = data.P
-        rospy.loginfo(self.P)
-        self.fx = self.P[0]
-        self.fy = self.P[5]
-        self.cx = self.P[2]
-        self.cy = self.P[6]
-        self.tx = self.P[3]
-        self.ty = self.P[7]
-
-    def defineP(self, arr):  # pass a list
-        self.P = arr
         self.fx = self.P[0]
         self.fy = self.P[5]
         self.cx = self.P[2]
@@ -68,15 +61,13 @@ class RGBD2XYZ():
 if __name__ == "__main__":
 
     try:
-        #       fx          cx             fy      cy
-        arr = [320.0, 0.0, 320.0, 0.0, 0.0, 320.0, 240.0, 0.0, 0.0, 0.0, 1.0, 0.0]
-
-        depth_arr = np.genfromtxt("dataset/data/left/depth_1.txt", delimiter=',')
+        rospy.init_node("camera_info")
+        depth_arr = np.genfromtxt(
+            "dataset/data/left/depth_1.txt", delimiter=',')
         depth_arr.dtype
         print(depth_arr)
 
         obj = RGBD2XYZ()
-        obj.defineP(arr)
         xyz = obj.xyz_array(depth_arr)
 
         print(xyz)  # takes long time to execute
