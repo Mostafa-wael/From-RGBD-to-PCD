@@ -68,7 +68,8 @@ def callback_depthImage(data):
         global obj
         xyz = obj.xyz_array(depthImage)
         
-
+def callback_PointCloud(data):
+    rospy.loginfo(data.points)
 if __name__ == "__main__":
 
     try:
@@ -77,7 +78,7 @@ if __name__ == "__main__":
         i = 0
         while not rospy.is_shutdown():
             depth_sub = rospy.Subscriber('/airsim_node/PhysXCar/front_left_bumblebee/DepthPlanner', Image, callback_depthImage)
-           
+            depth_sub = rospy.Subscriber("PointCloud_ANM", PointCloud, callback_PointCloud)
             
     except rospy.ROSInterruptException:
         print("Failed!")
