@@ -21,7 +21,8 @@ class RGBD2XYZ():
         self.depthScale = 1
         ################################################################
         self.defineParameters()
-        self.XYZ = rospy.Publisher("PointCloud_ANM", PointCloud, queue_size=50) # queue size may change 
+        self.XYZ_pub = rospy.Publisher(
+            "PointCloud_ANM", PointCloud, queue_size=1)  # queue size may change
 
     def defineParameters(self):  # waits for a message
         data = rospy.wait_for_message(
@@ -59,26 +60,34 @@ class RGBD2XYZ():
                 temp.y = self.calcY(i, temp.z)
                 temp.x = self.calcX(j, temp.z)
                 pcd.points.append(temp)
-        self.XYZ.publish(pcd)
+        self.XYZ_pub.publish(pcd)
+        ######################
+        global ID
+        print(ID)
+        if ID == 1:
+            file = open("depth_1.pcd", "w").write(np.asarray(pcd.points))
+        if ID == 2:
+            file = open("depth_2.pcd", "w").write(np.asarray(pcd.points))
+        ID += 1
         return pcd.points
 
+
 def callback_depthImage(data):
-        distances = np.fromstring(data.data, dtype=np.float32)
-        depthImage = np.reshape(distances, (data.height, data.width))
-        global obj
-        xyz = obj.xyz_array(depthImage)
-        
-def callback_PointCloud(data):
-    rospy.loginfo(data.points)
+    distances = np.fromstring(data.data, dtype=np.float32)
+    depthImage = np.reshape(distances, (data.height, data.width))
+    global obj
+    XYZ_pub = obj.xyz_array(depthImage)
+
+
+
 if __name__ == "__main__":
 
     try:
         rospy.init_node("camera_info")
         obj = RGBD2XYZ()
-        i = 0
-        while not rospy.is_shutdown():
-            depth_sub = rospy.Subscriber('/airsim_node/PhysXCar/front_left_bumblebee/DepthPlanner', Image, callback_depthImage)
-            depth_sub = rospy.Subscriber("PointCloud_ANM", PointCloud, callback_PointCloud)
+        ID = 0
+        depth_sub = rospy.Subscriber('/airsim_node/PhysXCar/front_left_bumblebee/DepthPlanner', Image, callback_depthImage, queue_size=1)
+        rospy.spin()
             
     except rospy.ROSInterruptException:
         print("Failed!")
