@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python
 import numpy as np
 import rospy
@@ -22,7 +21,8 @@ class RGBD2XYZ():
         self.defineParameters()
 
     def defineParameters(self):  # waits for a message
-        data = rospy.wait_for_message( '/airsim_node/PhysXCar/front_left_bumblebee/DepthPlanner/camera_info', CameraInfo, 100)
+        data = rospy.wait_for_message(
+            '/airsim_node/PhysXCar/front_left_bumblebee/DepthPlanner/camera_info', CameraInfo, 100)
         self.w = data.width
         self.h = data.height
         self.P = data.P
@@ -48,31 +48,37 @@ class RGBD2XYZ():
 
     def xyz_array(self, depthImage):
         array_xyz = []
-        dep_array = list(depthImage)
-        for i in range(0, self.h):
-            for j in range(0, self.w):
-                z = self.calcZ(dep_array[i+j])
-                y = self.calcY(i, z)
-                x = self.calcX(j, z)
-                arr = [x, y, z]
-                array_xyz.append(arr)
-        return array_xyz
+        dep_array = np.asarray(depthImage)
+        print(dep_array)
+        # for i in range(0, self.h):
+        #     for j in range(0, self.w):
+        #         z = self.calcZ(dep_array[i+j])
+        #         y = self.calcY(i, z)
+        #         x = self.calcX(j, z)
+        #         arr = [x, y, z]
+        #         array_xyz.append(arr)
+        # return array_xyz
 
+def callback_depthImage(data):
+        depthImage = data
+        #print(depthImage)
+        xyz = obj.xyz_array(depthImage)
+        #print(xyz)  # takes long time to execute
+        global i
+        # i = 0
+        # print("Done Sub!")
 
 if __name__ == "__main__":
 
     try:
         rospy.init_node("camera_info")
-        data = rospy.wait_for_message( '/airsim_node/PhysXCar/front_left_bumblebee/DepthPlanner', Image, 100)
-        depthImage = data
-        print(depthImage)
-
         obj = RGBD2XYZ()
-        xyz = obj.xyz_array(depthImage)
-
-        print(xyz)  # takes long time to execute
-        print("Done!")
-
+        i = 0
+        while not rospy.is_shutdown():
+            depth_sub = rospy.Subscriber('/airsim_node/PhysXCar/front_left_bumblebee/DepthPlanner', Image, callback_depthImage)
+            # print("Done ", i)
+            # i+=1
+            
     except rospy.ROSInterruptException:
         print("Failed!")
         pass
