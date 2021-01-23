@@ -2,7 +2,9 @@
 import numpy as np
 import rospy
 from std_msgs.msg import Int8, String
-from sensor_msgs.msg import Image, CameraInfo
+from sensor_msgs.msg import Image, CameraInfo, PointCloud
+from cv_bridge import CvBridge, CvBridgeError
+from geometry_msgs.msg import Point32
 
 
 class RGBD2XYZ():
@@ -19,6 +21,7 @@ class RGBD2XYZ():
         self.depthScale = 1
         ################################################################
         self.defineParameters()
+        self.XYZ = rospy.Publisher("PointCloud_ANM", PointCloud, queue_size=50) # queue size may change 
 
     def defineParameters(self):  # waits for a message
         data = rospy.wait_for_message(
@@ -47,26 +50,24 @@ class RGBD2XYZ():
         return Y
 
     def xyz_array(self, depthImage):
-        array_xyz = []
-        dep_array = np.asarray(depthImage)
-        print(dep_array)
-        # for i in range(0, self.h):
-        #     for j in range(0, self.w):
-        #         z = self.calcZ(dep_array[i+j])
-        #         y = self.calcY(i, z)
-        #         x = self.calcX(j, z)
-        #         arr = [x, y, z]
-        #         array_xyz.append(arr)
-        # return array_xyz
+        pcd = PointCloud()
+        pcd.points = []
+        temp = Point32()
+        for i in range(0, self.h):
+            for j in range(0, self.w):
+                temp.z = self.calcZ(depthImage[i][j])
+                temp.y = self.calcY(i, temp.z)
+                temp.x = self.calcX(j, temp.z)
+                pcd.points.append(temp)
+        self.XYZ.publish(pcd)
+        return pcd.points
 
 def callback_depthImage(data):
-        depthImage = data
-        #print(depthImage)
+        distances = np.fromstring(data.data, dtype=np.float32)
+        depthImage = np.reshape(distances, (data.height, data.width))
+        global obj
         xyz = obj.xyz_array(depthImage)
-        #print(xyz)  # takes long time to execute
-        global i
-        # i = 0
-        # print("Done Sub!")
+        
 
 if __name__ == "__main__":
 
@@ -76,8 +77,7 @@ if __name__ == "__main__":
         i = 0
         while not rospy.is_shutdown():
             depth_sub = rospy.Subscriber('/airsim_node/PhysXCar/front_left_bumblebee/DepthPlanner', Image, callback_depthImage)
-            # print("Done ", i)
-            # i+=1
+           
             
     except rospy.ROSInterruptException:
         print("Failed!")
