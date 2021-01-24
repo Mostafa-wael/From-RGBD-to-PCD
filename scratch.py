@@ -3,8 +3,8 @@ import numpy as np
 import rospy
 from std_msgs.msg import Int8, String
 from sensor_msgs.msg import Image, CameraInfo, PointCloud
-from cv_bridge import CvBridge, CvBridgeError
 from geometry_msgs.msg import Point32
+import pypcd
 
 
 class RGBD2XYZ():
@@ -51,23 +51,36 @@ class RGBD2XYZ():
         return Y
 
     def xyz_array(self, depthImage):
-        pcd = PointCloud()
-        pcd.points = []
-        temp = Point32()
-        for i in range(0, self.h):
-            for j in range(0, self.w):
-                temp.z = self.calcZ(depthImage[i][j])
-                temp.y = self.calcY(i, temp.z)
-                temp.x = self.calcX(j, temp.z)
-                pcd.points.append(temp)
-        self.XYZ_pub.publish(pcd)
-        ######################
         global ID
         print(ID)
-        if ID == 1:
-            file = open("depth_1.pcd", "w").write(np.asarray(pcd.points))
-        if ID == 2:
-            file = open("depth_2.pcd", "w").write(np.asarray(pcd.points))
+        pcd = PointCloud()
+        tempPoint = Point32()
+        tempPoint.z = 0
+        tempPoint.y = 0
+        tempPoint.x = 0
+        pcd.points = [tempPoint] * self.h * self.w
+        if ID == 0:
+            f = open("depth_1.txt", "w")
+        for i in range(0, self.h):
+            for j in range(0, self.w):
+                pcd.points[i+j].z = self.calcZ(depthImage[i][j])
+                pcd.points[i+j].y = self.calcY(i, pcd.points[i+j].z)
+                pcd.points[i+j].x = self.calcX(j, pcd.points[i+j].z)
+                if ID == 0:
+                    f.write(str("X: "+str(pcd.points[i+j].x) + ", Y: " + str(
+                        pcd.points[i+j].y) + ", Z: " + str(pcd.points[i+j].z) + "\n"))
+        if ID == 0:
+            f.close()
+        ######################
+        if ID == 0:
+            f = open("depth_2.txt", "w")
+            for i in range(0, self.h):
+                for j in range(0, self.w):
+                    f.write(str("X: "+str(pcd.points[i+j].x) + ", Y: " + str(
+                        pcd.points[i+j].y) + ", Z: " + str(pcd.points[i+j].z) + "\n"))
+            f.close()
+        self.XYZ_pub.publish(pcd)
+
         ID += 1
         return pcd.points
 
@@ -79,16 +92,16 @@ def callback_depthImage(data):
     XYZ_pub = obj.xyz_array(depthImage)
 
 
-
 if __name__ == "__main__":
 
     try:
         rospy.init_node("camera_info")
         obj = RGBD2XYZ()
         ID = 0
-        depth_sub = rospy.Subscriber('/airsim_node/PhysXCar/front_left_bumblebee/DepthPlanner', Image, callback_depthImage, queue_size=1)
+        depth_sub = rospy.Subscriber(
+            '/airsim_node/PhysXCar/front_left_bumblebee/DepthPlanner', Image, callback_depthImage, queue_size=1)
         rospy.spin()
-            
+
     except rospy.ROSInterruptException:
         print("Failed!")
         pass
