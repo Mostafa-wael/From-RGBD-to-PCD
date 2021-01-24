@@ -4,7 +4,6 @@ import rospy
 from std_msgs.msg import Int8, String
 from sensor_msgs.msg import Image, CameraInfo, PointCloud
 from geometry_msgs.msg import Point32
-import pypcd
 
 
 class RGBD2XYZ():
@@ -54,18 +53,20 @@ class RGBD2XYZ():
         global ID
         print(ID)
         pcd = PointCloud()
-        tempPoint = Point32()
-        tempPoint.z = 0
-        tempPoint.y = 0
-        tempPoint.x = 0
-        pcd.points = [tempPoint] * self.h * self.w
+        temp = Point32()
+        temp.z = 0
+        temp.y = 0
+        temp.x = 0
+        pcd.points = []
         if ID == 0:
             f = open("depth_1.txt", "w")
         for i in range(0, self.h):
             for j in range(0, self.w):
-                pcd.points[i+j].z = self.calcZ(depthImage[i][j])
-                pcd.points[i+j].y = self.calcY(i, pcd.points[i+j].z)
-                pcd.points[i+j].x = self.calcX(j, pcd.points[i+j].z)
+                tempPoint = Point32()
+                tempPoint.z = self.calcZ(depthImage[i][j])
+                tempPoint.y = self.calcY(i, tempPoint.z)
+                tempPoint.x = self.calcX(j, tempPoint.z)
+                pcd.points.append(tempPoint)
                 if ID == 0:
                     f.write(str("X: "+str(pcd.points[i+j].x) + ", Y: " + str(
                         pcd.points[i+j].y) + ", Z: " + str(pcd.points[i+j].z) + "\n"))
