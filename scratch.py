@@ -50,16 +50,13 @@ class RGBD2XYZ():
         return Y
 
     def xyz_array(self, depthImage):
-        global ID
-        print(ID)
         pcd = PointCloud()
+        pcd.header.frame_id = "front_left_bumblebee_body"
         temp = Point32()
         temp.z = 0
         temp.y = 0
         temp.x = 0
         pcd.points = []
-        if ID == 0:
-            f = open("depth_1.txt", "w")
         for i in range(0, self.h):
             for j in range(0, self.w):
                 tempPoint = Point32()
@@ -67,30 +64,21 @@ class RGBD2XYZ():
                 tempPoint.y = self.calcY(i, tempPoint.z)
                 tempPoint.x = self.calcX(j, tempPoint.z)
                 pcd.points.append(tempPoint)
-                if ID == 0:
-                    f.write(str("X: "+str(pcd.points[i+j].x) + ", Y: " + str(
-                        pcd.points[i+j].y) + ", Z: " + str(pcd.points[i+j].z) + "\n"))
-        if ID == 0:
-            f.close()
         ######################
-        if ID == 0:
-            f = open("depth_2.txt", "w")
-            for i in range(0, self.h):
-                for j in range(0, self.w):
-                    f.write(str("X: "+str(pcd.points[i+j].x) + ", Y: " + str(
-                        pcd.points[i+j].y) + ", Z: " + str(pcd.points[i+j].z) + "\n"))
-            f.close()
         self.XYZ_pub.publish(pcd)
-
-        ID += 1
         return pcd.points
 
 
 def callback_depthImage(data):
+    global imageRec
+    if imageRec == True:
+        return
     distances = np.fromstring(data.data, dtype=np.float32)
     depthImage = np.reshape(distances, (data.height, data.width))
     global obj
     XYZ_pub = obj.xyz_array(depthImage)
+    imageRec = False
+    
 
 
 if __name__ == "__main__":
@@ -98,7 +86,7 @@ if __name__ == "__main__":
     try:
         rospy.init_node("camera_info")
         obj = RGBD2XYZ()
-        ID = 0
+        imageRec = False
         depth_sub = rospy.Subscriber(
             '/airsim_node/PhysXCar/front_left_bumblebee/DepthPlanner', Image, callback_depthImage, queue_size=1)
         rospy.spin()
