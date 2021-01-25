@@ -2,8 +2,8 @@
 import numpy as np
 import rospy
 from std_msgs.msg import Int8, String
-from sensor_msgs.msg import Image, CameraInfo, PointCloud
-from geometry_msgs.msg import Point32
+from sensor_msgs.msg import Image, CameraInfo, PointCloud, ChannelFloat32
+from geometry_msgs.msg import Point32, Point
 
 # Projection/camera matrix
 #     [fx'  0  cx' Tx]
@@ -27,6 +27,7 @@ class RGBD2XYZ():
         self.cy = self.P[6]
         self.tx = self.P[3]
         self.ty = self.P[7]
+        
 
     def calcPCD(self, depthImage):  # returns a PointCloud object
         print(self.ID)
@@ -36,8 +37,11 @@ class RGBD2XYZ():
         pcd = PointCloud()
         # initializing the frame id, this is a mechanical frame
         pcd.header.frame_id = "front_left_bumblebee_body"
+        # initializing the frame time stamp
+        pcd.header.stamp = rospy.Time.now() # Note you need to call rospy.init_node() before this to work properly 
         # intializing the points list
         pcd.points = []
+        # pcd.channels = []
         # initializing rows
         rows = np.zeros((self.h, self.w), dtype=float)
         rows[:, :] = np.arange(0, self.w)
@@ -51,9 +55,9 @@ class RGBD2XYZ():
         x = (np.multiply((rows-self.cx), z))/self.fx
         for i in range(0, self.h):
             for j in range(0, self.w):
-                tempPoint = Point32()  # always declare a new object to avoid errors due to bad references
-                tempPoint.x, tempPoint.y, tempPoint.z = x[i][j], y[i][j], z[i][j]
-                pcd.points.append(tempPoint)
+                pcd.points.append(Point32(-x[i][j], y[i][j], z[i][j])) # always declare a new object to avoid errors due to bad references
+                # pcd.channels.append(ChannelFloat32("rgb", struct.unpack('f', struct.pack('i', 0xff0000))[0]))
+
         return pcd
 
 
