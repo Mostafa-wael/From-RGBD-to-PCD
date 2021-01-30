@@ -5,6 +5,7 @@ from std_msgs.msg import Int8, String
 from sensor_msgs.msg import Image, CameraInfo, PointCloud, ChannelFloat32
 from geometry_msgs.msg import Point32, Point
 from cv_bridge import CvBridge
+import tf
 
 # Projection/camera matrix
 #     [fx'  0  cx' Tx]
@@ -32,6 +33,8 @@ class RGBD2XYZ():
         ################################################################
         # contains the RGB values of the image
         self.rgb = np.zeros((self.h, self.w, 3), dtype=int)
+        # self.listener = tf.TransformListener()
+
 
     def getRGB(self, Image):
         bridge = CvBridge()
@@ -74,6 +77,10 @@ class RGBD2XYZ():
                 pcd.points.append(Point32(-x[i][j], y[i][j], z[i][j]))
                 # pcd.channels.append(ChannelFloat32(
                 #     "rgb", [self.rgb[i][j][0], self.rgb[i][j][1], self.rgb[i][j][2]]))
+
+        # self.listener.waitForTransform(
+        #     "/world_ned", "/PhysXCar/front_left_bumblebee_body", rospy.Time.now(), rospy.Duration(4.0))
+        # pcd_out = self.listener.transformPointCloud("/world_ned", pcd)
         return pcd
 
 
