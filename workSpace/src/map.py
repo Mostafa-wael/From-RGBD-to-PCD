@@ -17,6 +17,8 @@ class createMap():
 
     def filterZ(self, threshold):
         pcdArray = np.asarray(self.PCD.points)
+        # filter array for values of z close to ground level
+        pcdArray = pcdArray[pcdArray.z >= -18 and pcdArray.z <= 18]
 
     def callback_trasnformPCD(self, pcd_in):
         try:
