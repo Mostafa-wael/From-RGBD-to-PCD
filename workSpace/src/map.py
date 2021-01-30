@@ -15,6 +15,9 @@ class createMap():
         self.listener = tf.TransformListener()
         self.PCD = PointCloud()
 
+    def filterZ(self, threshold):
+        pcdArray = np.asarray(self.PCD.points)
+
     def callback_trasnformPCD(self, pcd_in):
         try:
             self.ID += 1
@@ -24,6 +27,7 @@ class createMap():
                 "/world_ned", "/front_left_bumblebee_body", pcd_in.header.stamp, rospy.Duration(1.0))
             self.PCD = self.listener.transformPointCloud("world_ned", pcd_in)
             ###
+            self.filterZ(10)
         except (tf.LookupException, tf.ConnectivityException):
             print("Error")
             pass

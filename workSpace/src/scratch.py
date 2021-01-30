@@ -68,7 +68,7 @@ class RGBD2XYZ():
         cols[:, :] = np.array([np.arange(0, self.h)]).T
         # the calculations
         # for more about the equations, check this link: https://medium.com/yodayoda/from-depth-map-to-point-cloud-7473721d3f
-        z = depthImage / self.depthScale
+        z = depthImage / self.depthScale            
         y = (np.multiply((cols-self.cy), z))/self.fy
         x = (np.multiply((rows-self.cx), z))/self.fx
         for i in range(0, self.h):
