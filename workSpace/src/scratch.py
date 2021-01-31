@@ -51,11 +51,6 @@ class RGBD2XYZ():
             # '/airsim_node/PhysXCar/front_left_bumblebee/Scene', Image, self.getRGB, queue_size=1)  # queue size of length 1 i.e. hold only one object and process it
         # decalring a point cloud variable
         pcd = PointCloud()
-        # initializing the frame id, this is a mechanical frame
-        pcd.header.frame_id = "front_left_bumblebee_body"
-        # initializing the frame time stamp
-        # Note you need to call rospy.init_node() before it; to work properly
-        pcd.header.stamp = rospy.Time.now()
         # intializing the points list
         pcd.points = []
         # intializing the channels list
@@ -74,10 +69,16 @@ class RGBD2XYZ():
         for i in range(0, self.h):
             for j in range(0, self.w):
                 # always declare a new object to avoid errors due to bad references
-                pcd.points.append(Point32(-x[i][j], y[i][j], z[i][j]))
+                pcd.points.append(Point32(z[i][j], -x[i][j], -y[i][j]))
                 # pcd.channels.append(ChannelFloat32(
                 #     "rgb", [self.rgb[i][j][0], self.rgb[i][j][1], self.rgb[i][j][2]]))
-
+        ################################################################
+        # initializing the frame id, this is a mechanical frame
+        pcd.header.frame_id = "front_left_bumblebee_body"
+        # initializing the frame time stamp
+        # Note you need to call rospy.init_node() before it; to work properly
+        pcd.header.stamp = rospy.Time.now()
+        ################################################################
         # self.listener.waitForTransform(
         #     "/world_ned", "/PhysXCar/front_left_bumblebee_body", rospy.Time.now(), rospy.Duration(4.0))
         # pcd_out = self.listener.transformPointCloud("/world_ned", pcd)
